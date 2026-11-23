@@ -1,0 +1,488 @@
+name: Theme Previews
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'public/themes/**'
+      - 'scripts/fixtures/**'
+      - 'scripts/capture-theme-previews.mjs'
+      - 'scripts/render-v2ex-fixture.mjs'
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      themes:
+        description: 'Space-separated theme slugs to capture (leave empty for all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: theme-previews-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    if: >-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'github-actions[bot]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Detect themes needing preview screenshots
+        id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          MANUAL_THEMES: ${{ inputs.themes }}
+        run: |
+          node --input-type=module - <<'EOF'
+          import { execFileSync } from 'node:child_process'
+          import { appendFileSync, existsSync, readdirSync, unlinkSync } from 'node:fs'
+
+          const { EVENT_NAME, EVENT_ACTION, BASE_SHA, HEAD_SHA, BEFORE_SHA, MANUAL_THEMES, GITHUB_OUTPUT } = process.env
+
+          const allSlugs = readdirSync('public/themes', { withFileTypes: true })
+            .filter(
+              (d) =>
+                d.isDirectory() &&
+                existsSync(`public/themes/${d.name}/theme.json`) &&
+                existsSync(`public/themes/${d.name}/theme.css`),
+            )
+            .map((d) => d.name)
+            .sort()
+
+          function writeOutputs(targetSlugs, deletedCount) {
+            console.log('Target slugs:', targetSlugs)
+            appendFileSync(GITHUB_OUTPUT, `slugs_json=${JSON.stringify(targetSlugs)}\n`)
+            appendFileSync(GITHUB_OUTPUT, `has_targets=${targetSlugs.length > 0 ? 'true' : 'false'}\n`)
+            appendFileSync(GITHUB_OUTPUT, `has_deletions=${deletedCount > 0 ? 'true' : 'false'}\n`)
+          }
+
+          if (EVENT_NAME === 'workflow_dispatch') {
+            const requested = (MANUAL_THEMES ?? '').trim().split(/\s+/).filter(Boolean)
+            writeOutputs(requested.length > 0 ? requested : allSlugs, 0)
+            process.exit(0)
+          }
+
+          function gitDiffNames(range) {
+            const out = execFileSync('git', ['diff', '--name-only', range], { encoding: 'utf8' })
+            return out.split('\n').map((s) => s.trim()).filter(Boolean)
+          }
+
+          const prFiles = gitDiffNames(`${BASE_SHA}...${HEAD_SHA}`)
+          const prFileSet = new Set(prFiles)
+          let recentFiles = prFiles
+          if (EVENT_ACTION === 'synchronize' && BEFORE_SHA && !/^0+$/.test(BEFORE_SHA)) {
+            try {
+              recentFiles = gitDiffNames(`${BEFORE_SHA}..${HEAD_SHA}`).filter((f) => prFileSet.has(f))
+            } catch {
+              recentFiles = prFiles
+            }
+          }
+
+          const fixtureChanged = recentFiles.some(
+            (f) =>
+              f.startsWith('scripts/fixtures/') ||
+              f === 'scripts/capture-theme-previews.mjs' ||
+              f === 'scripts/render-v2ex-fixture.mjs',
+          )
+
+          const recentlyUpdatedWebps = new Set(
+            recentFiles
+              .filter((f) => /^public\/theme-previews\/[^/]+\.webp$/.test(f))
+              .map((f) => f.slice('public/theme-previews/'.length, -'.webp'.length)),
+          )
+
+          const recentlyChangedThemeSlugs = new Set(
+            recentFiles
+              .filter((f) => /^public\/themes\/[^/]+\//.test(f))
+              .map((f) => f.split('/')[2]),
+          )
+
+          const prTouchedThemeSlugs = new Set(
+            prFiles
+              .filter((f) => /^public\/themes\/[^/]+\//.test(f))
+              .map((f) => f.split('/')[2]),
+          )
+
+          // Remove orphaned .webp for themes deleted in this PR.
+          let deletedCount = 0
+          for (const slug of prTouchedThemeSlugs) {
+            if (!allSlugs.includes(slug)) {
+              const webpPath = `public/theme-previews/${slug}.webp`
+              if (existsSync(webpPath)) {
+                unlinkSync(webpPath)
+                console.log(`Removed orphaned preview: ${webpPath}`)
+                deletedCount++
+              }
+            }
+          }
+
+          const targetSlugs = fixtureChanged
+            ? allSlugs
+            : allSlugs.filter((slug) => {
+                if (!existsSync(`public/theme-previews/${slug}.webp`)) return true
+                return recentlyChangedThemeSlugs.has(slug) && !recentlyUpdatedWebps.has(slug)
+              })
+
+          writeOutputs(targetSlugs, deletedCount)
+          EOF
+
+      - name: Setup pnpm
+        if: steps.detect.outputs.has_targets == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        if: steps.detect.outputs.has_targets == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.detect.outputs.has_targets == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium and CJK fonts
+        if: steps.detect.outputs.has_targets == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          pnpm exec playwright install chromium --with-deps
+
+      - name: Capture theme preview screenshots
+        if: steps.detect.outputs.has_targets == 'true'
+        env:
+          SLUGS_JSON: ${{ steps.detect.outputs.slugs_json }}
+        run: |
+          node --input-type=module - <<'EOF'
+          import { execFileSync } from 'node:child_process'
+          const slugs = JSON.parse(process.env.SLUGS_JSON || '[]')
+          execFileSync(process.execPath, ['scripts/capture-theme-previews.mjs', ...slugs], { stdio: 'inherit' })
+          EOF
+
+      - name: Commit and push preview screenshots
+        if: steps.detect.outputs.has_targets == 'true' || steps.detect.outputs.has_deletions == 'true'
+        run: |
+          if [ -z "$(git status --porcelain public/theme-previews)" ]; then
+            echo "No preview screenshot changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A public/theme-previews
+          git commit -m "chore(themes): update preview screenshots"
+          git push
+
+  comment-screenshots:
+    # Maintainers can comment `/screenshots` (or `/screenshots <slug> ...`) on any PR, including external fork PRs.
+    # Always runs trusted scripts/deps from the default branch and only reads static theme.json/theme.css from the PR.
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      startsWith(github.event.comment.body, '/screenshots')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate comment and inspect PR
+        id: pr
+        uses: actions/github-script@v7
+        env:
+          HAS_FORK_PR_PAT: ${{ secrets.FORK_PR_PAT != '' }}
+        with:
+          script: |
+            const body = (context.payload.comment.body || '').trim()
+            const match = body.match(/^\/screenshots(?:\s+([a-z0-9-]+(?:\s+[a-z0-9-]+)*))?$/i)
+            if (!match) {
+              core.info('Comment does not match /screenshots command syntax; skipping.')
+              core.setOutput('proceed', 'false')
+              return
+            }
+
+            const requestedSlugs = match[1]
+              ? [...new Set(match[1].trim().split(/\s+/).filter(Boolean))]
+              : []
+
+            const { owner, repo } = context.repo
+            const pull_number = context.issue.number
+
+            async function reply(message) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: pull_number, body: message })
+            }
+
+            const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number })
+            if (pr.state !== 'open') {
+              await reply('该 PR 当前不是打开状态，已跳过生成样张。')
+              core.setOutput('proceed', 'false')
+              return
+            }
+            if (!pr.head.repo) {
+              await reply('无法读取该 PR 的源仓库（可能已被删除），已跳过生成样张。')
+              core.setOutput('proceed', 'false')
+              return
+            }
+
+            const isFork = pr.head.repo.full_name !== `${owner}/${repo}`
+            if (isFork && !pr.maintainer_can_modify) {
+              await reply('此 Fork PR 未开启 **Allow edits by maintainers**，无法自动推送 `.webp` 样张到源分支。')
+              core.setOutput('proceed', 'false')
+              return
+            }
+            if (isFork && process.env.HAS_FORK_PR_PAT !== 'true') {
+              await reply('仓库尚未配置 `FORK_PR_PAT` Secret（需具备 `public_repo` 权限的 Classic PAT），无法自动推送到外部 Fork 分支。')
+              core.setOutput('proceed', 'false')
+              return
+            }
+
+            await github.rest.reactions.createForIssueComment({
+              owner,
+              repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            })
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            })
+
+            const touchedSlugs = [...new Set(
+              files
+                .map((f) => f.filename)
+                .filter((name) => /^public\/themes\/[a-z0-9-]+\//.test(name))
+                .map((name) => name.split('/')[2]),
+            )].sort()
+
+            core.setOutput('proceed', 'true')
+            core.setOutput('is_fork', isFork ? 'true' : 'false')
+            core.setOutput('pr_number', String(pull_number))
+            core.setOutput('head_repo', pr.head.repo.full_name)
+            core.setOutput('head_ref', pr.head.ref)
+            core.setOutput('head_sha', pr.head.sha)
+            core.setOutput('requested_slugs_json', JSON.stringify(requestedSlugs))
+            core.setOutput('touched_slugs_json', JSON.stringify(touchedSlugs))
+
+      - name: Checkout trusted default branch
+        if: steps.pr.outputs.proceed == 'true'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Extract static theme files from PR head
+        id: extract
+        if: steps.pr.outputs.proceed == 'true'
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          REQUESTED_SLUGS_JSON: ${{ steps.pr.outputs.requested_slugs_json }}
+          TOUCHED_SLUGS_JSON: ${{ steps.pr.outputs.touched_slugs_json }}
+        run: |
+          node --input-type=module - <<'EOF'
+          import { execFileSync } from 'node:child_process'
+          import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
+
+          const { PR_NUMBER, HEAD_SHA, REQUESTED_SLUGS_JSON, TOUCHED_SLUGS_JSON, GITHUB_OUTPUT } = process.env
+          const requestedSlugs = JSON.parse(REQUESTED_SLUGS_JSON || '[]')
+          const touchedSlugs = JSON.parse(TOUCHED_SLUGS_JSON || '[]')
+
+          execFileSync('git', ['fetch', '--no-tags', '--depth=1', 'origin', `refs/pull/${PR_NUMBER}/head`], {
+            stdio: 'inherit',
+          })
+          const fetchedSha = execFileSync('git', ['rev-parse', 'FETCH_HEAD'], { encoding: 'utf8' }).trim()
+          if (fetchedSha !== HEAD_SHA) {
+            throw new Error(`PR head changed during workflow (${HEAD_SHA} -> ${fetchedSha}); re-run /screenshots after reviewing the latest commit.`)
+          }
+
+          function listTree(dir) {
+            try {
+              const out = execFileSync('git', ['ls-tree', '-r', '--name-only', 'FETCH_HEAD', dir], { encoding: 'utf8' })
+              return new Set(out.split('\n').map((s) => s.trim()).filter(Boolean))
+            } catch {
+              return new Set()
+            }
+          }
+
+          const prThemeFiles = listTree('public/themes')
+          const prPreviewFiles = listTree('public/theme-previews')
+
+          const validSlugs = [...new Set(
+            [...prThemeFiles]
+              .filter((f) => /^public\/themes\/[a-z0-9-]+\/theme\.json$/.test(f))
+              .map((f) => f.split('/')[2])
+              .filter((slug) => prThemeFiles.has(`public/themes/${slug}/theme.css`)),
+          )].sort()
+          const validSet = new Set(validSlugs)
+
+          const deletedSlugs = touchedSlugs.filter(
+            (slug) => !validSet.has(slug) && prPreviewFiles.has(`public/theme-previews/${slug}.webp`),
+          )
+
+          let targetSlugs
+          if (requestedSlugs.length > 0) {
+            const unknown = requestedSlugs.filter((slug) => !validSet.has(slug))
+            if (unknown.length > 0) {
+              throw new Error(`Unknown or incomplete theme slug(s) in PR: ${unknown.join(', ')}`)
+            }
+            targetSlugs = requestedSlugs.sort()
+          } else {
+            targetSlugs = validSlugs.filter(
+              (slug) => touchedSlugs.includes(slug) || !prPreviewFiles.has(`public/theme-previews/${slug}.webp`),
+            )
+          }
+
+          // Copy ONLY pure static theme.json & theme.css from PR head into trusted workspace.
+          for (const slug of targetSlugs) {
+            mkdirSync(`public/themes/${slug}`, { recursive: true })
+            for (const file of ['theme.json', 'theme.css']) {
+              const content = execFileSync('git', ['show', `FETCH_HEAD:public/themes/${slug}/${file}`])
+              writeFileSync(`public/themes/${slug}/${file}`, content)
+            }
+          }
+
+          console.log('Target slugs:', targetSlugs)
+          console.log('Deleted slugs:', deletedSlugs)
+          appendFileSync(GITHUB_OUTPUT, `slugs_json=${JSON.stringify(targetSlugs)}\n`)
+          appendFileSync(GITHUB_OUTPUT, `deleted_slugs_json=${JSON.stringify(deletedSlugs)}\n`)
+          appendFileSync(GITHUB_OUTPUT, `has_targets=${targetSlugs.length > 0 ? 'true' : 'false'}\n`)
+          appendFileSync(GITHUB_OUTPUT, `has_deletions=${deletedSlugs.length > 0 ? 'true' : 'false'}\n`)
+          EOF
+
+      - name: Setup pnpm
+        if: steps.extract.outputs.has_targets == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        if: steps.extract.outputs.has_targets == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install trusted dependencies
+        if: steps.extract.outputs.has_targets == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium and CJK fonts
+        if: steps.extract.outputs.has_targets == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          pnpm exec playwright install chromium --with-deps
+
+      - name: Capture theme preview screenshots
+        if: steps.extract.outputs.has_targets == 'true'
+        env:
+          SLUGS_JSON: ${{ steps.extract.outputs.slugs_json }}
+        run: |
+          node --input-type=module - <<'EOF'
+          import { execFileSync } from 'node:child_process'
+          const slugs = JSON.parse(process.env.SLUGS_JSON || '[]')
+          execFileSync(process.execPath, ['scripts/capture-theme-previews.mjs', ...slugs], { stdio: 'inherit' })
+          EOF
+
+      - name: Checkout PR branch to push generated previews
+        if: steps.extract.outputs.has_targets == 'true' || steps.extract.outputs.has_deletions == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_ref }}
+          path: .pr-repo
+          token: ${{ steps.pr.outputs.is_fork == 'true' && secrets.FORK_PR_PAT || github.token }}
+
+      - name: Commit and push preview screenshots to PR branch
+        id: push
+        if: steps.extract.outputs.has_targets == 'true' || steps.extract.outputs.has_deletions == 'true'
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          SLUGS_JSON: ${{ steps.extract.outputs.slugs_json }}
+          DELETED_SLUGS_JSON: ${{ steps.extract.outputs.deleted_slugs_json }}
+        run: |
+          node --input-type=module - <<'EOF'
+          import { execFileSync } from 'node:child_process'
+          import { appendFileSync, copyFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs'
+
+          const { HEAD_REF, HEAD_SHA, SLUGS_JSON, DELETED_SLUGS_JSON, GITHUB_OUTPUT } = process.env
+          const currentHead = execFileSync('git', ['-C', '.pr-repo', 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+          if (currentHead !== HEAD_SHA) {
+            throw new Error(`PR head changed before push (${HEAD_SHA} -> ${currentHead}); re-run /screenshots after reviewing the latest commit.`)
+          }
+
+          const slugs = JSON.parse(SLUGS_JSON || '[]')
+          const deletedSlugs = JSON.parse(DELETED_SLUGS_JSON || '[]')
+
+          mkdirSync('.pr-repo/public/theme-previews', { recursive: true })
+          for (const slug of slugs) {
+            copyFileSync(`public/theme-previews/${slug}.webp`, `.pr-repo/public/theme-previews/${slug}.webp`)
+          }
+          for (const slug of deletedSlugs) {
+            const target = `.pr-repo/public/theme-previews/${slug}.webp`
+            if (existsSync(target)) unlinkSync(target)
+          }
+
+          const status = execFileSync('git', ['-C', '.pr-repo', 'status', '--porcelain', 'public/theme-previews'], {
+            encoding: 'utf8',
+          }).trim()
+
+          if (!status) {
+            console.log('No preview screenshot changes to commit.')
+            appendFileSync(GITHUB_OUTPUT, 'pushed=false\n')
+            process.exit(0)
+          }
+
+          execFileSync('git', ['-C', '.pr-repo', 'config', 'user.name', 'github-actions[bot]'], { stdio: 'inherit' })
+          execFileSync(
+            'git',
+            ['-C', '.pr-repo', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'],
+            { stdio: 'inherit' },
+          )
+          execFileSync('git', ['-C', '.pr-repo', 'add', '-A', 'public/theme-previews'], { stdio: 'inherit' })
+          execFileSync('git', ['-C', '.pr-repo', 'commit', '-m', 'chore(themes): update preview screenshots'], {
+            stdio: 'inherit',
+          })
+          execFileSync('git', ['-C', '.pr-repo', 'push', 'origin', `HEAD:refs/heads/${HEAD_REF}`], { stdio: 'inherit' })
+          appendFileSync(GITHUB_OUTPUT, 'pushed=true\n')
+          EOF
+
+      - name: Reply on PR
+        if: steps.pr.outputs.proceed == 'true'
+        uses: actions/github-script@v7
+        env:
+          SLUGS_JSON: ${{ steps.extract.outputs.slugs_json }}
+          DELETED_SLUGS_JSON: ${{ steps.extract.outputs.deleted_slugs_json }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const issue_number = context.issue.number
+            const slugs = JSON.parse(process.env.SLUGS_JSON || '[]')
+            const deleted = JSON.parse(process.env.DELETED_SLUGS_JSON || '[]')
+            const pushed = process.env.PUSHED === 'true'
+
+            let body
+            if (pushed) {
+              const parts = []
+              if (slugs.length > 0) parts.push(`已生成并推送样张：${slugs.map((s) => `\`public/theme-previews/${s}.webp\``).join('、')}`)
+              if (deleted.length > 0) parts.push(`已移除过期样张：${deleted.map((s) => `\`public/theme-previews/${s}.webp\``).join('、')}`)
+              body = `${parts.join('；')}。`
+            } else {
+              body = '没有需要更新的 `.webp` 样张。'
+            }
+
+            await github.rest.issues.createComment({ owner, repo, issue_number, body })

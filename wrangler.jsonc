@@ -25,5 +25,7 @@
 				"period": 60
 			}
 		}
-	]
+	],
+	// Keep PR previews isolated from production bindings; loaders degrade gracefully without D1.
+	"previews": {}
 }
