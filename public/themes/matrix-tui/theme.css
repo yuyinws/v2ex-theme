@@ -1,0 +1,1421 @@
+/*
+ * Matrix TUI — V2EX theme
+ * Dark-only, monochrome phosphor-green terminal with CSS-only digital rain.
+ * Pure CSS, no external assets.
+ */
+
+/* ============================================================
+ * 1. Tokens (dark-only: locked regardless of V2EX setting)
+ * ============================================================ */
+:root:root,
+:root:root[data-site-theme="light"],
+:root:root[data-site-theme="dark"] {
+  color-scheme: dark;
+
+  --vt-mono: "JetBrains Mono", "Cascadia Mono", "SF Mono", "Fira Code", Menlo, Consolas,
+    "Sarasa Mono SC", "Noto Sans Mono CJK SC", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", monospace;
+
+  --vt-canvas: #000000;
+  --vt-surface: rgba(0, 8, 2, 0.9);
+  --vt-fill: #021208;
+  --vt-hover: #04230e;
+  --vt-line: #0c3a19;
+  --vt-control: #17692f;
+  --vt-ink: #9dffb4;
+  --vt-muted: #45c86a;
+  --vt-dim: #2c9a4c;
+  --vt-accent: #00ff41;      /* matrix green */
+  --vt-accent-soft: rgba(0, 255, 65, 0.1);
+  --vt-glow: 0 0 6px rgba(0, 255, 65, 0.55);
+  --vt-solid: #000a03;
+  --vt-cyan: #d4ffdf;     /* rain-head white-green */
+  --vt-amber: #00ff41;
+  --vt-magenta: #39e75f;
+  --vt-red: #b6ffc8;
+  --vt-on-accent: #000000;
+  --vt-radius: 0px;
+  --vt-logo-filter: brightness(0) invert(0.6) sepia(1) hue-rotate(80deg) saturate(6);
+
+  --code-font: var(--vt-mono);
+  --box-background-color: var(--vt-surface);
+  --box-background-translucent-color: var(--vt-surface);
+  --box-glass-color: var(--vt-surface);
+  --box-thick-glass-color: var(--vt-surface);
+  --box-background-alt-color: var(--vt-fill);
+  --box-background-hover-color: var(--vt-hover);
+  --box-foreground-color: var(--vt-ink);
+  --box-border-color: var(--vt-line);
+  --box-border-hover-color: var(--vt-control);
+  --box-border-focus-color: var(--vt-accent);
+  --box-border-radius: 0px;
+  --button-background-color: var(--vt-fill);
+  --button-background-hover-color: var(--vt-hover);
+  --button-background-active-color: var(--vt-line);
+  --button-foreground-color: var(--vt-ink);
+  --button-foreground-hover-color: var(--vt-accent);
+  --button-border-color: var(--vt-control);
+  --button-border-hover-color: var(--vt-accent);
+  --node-sidebar-hover-color: var(--vt-fill);
+  --color-foreground: var(--vt-ink);
+  --color-graphite: var(--vt-ink);
+  --color-gray: var(--vt-muted);
+  --color-fade: var(--vt-dim);
+  --link-color: var(--vt-muted);
+  --link-visited-color: var(--vt-muted);
+  --link-hover-color: var(--vt-accent);
+  --link-primary-color: var(--vt-accent);
+  --color-blue: var(--vt-cyan);
+  --subtle-blue-background-color: rgba(0, 255, 65, 0.06);
+  --tree-line: var(--vt-control);
+  --tree-line-hot: var(--vt-accent);
+  --reply-line-0: var(--vt-accent);
+  --reply-line-1: var(--vt-cyan);
+  --reply-line-2: var(--vt-amber);
+  --reply-line-3: var(--vt-magenta);
+  --reply-line-4: #17692f;
+  --reply-line-5: var(--vt-red);
+
+  --theme-switch-track-color: var(--vt-fill);
+  --theme-switch-track-hover-color: var(--vt-hover);
+  --theme-switch-thumb-color: var(--vt-accent);
+  --theme-switch-thumb-hover-color: var(--vt-accent);
+  --theme-switch-thumb-shadow: none;
+  --theme-switch-glyph-color: var(--vt-muted);
+  --theme-switch-glyph-hover-color: var(--vt-ink);
+  --theme-switch-glyph-chosen-color: var(--vt-on-accent);
+  --theme-switch-glyph-chosen-hover-color: var(--vt-on-accent);
+}
+
+/* ============================================================
+ * 2. Document & shell
+ * ============================================================ */
+html {
+  background: #000 !important;
+  color: var(--vt-ink);
+}
+body {
+  background: transparent !important;
+  color: var(--vt-ink);
+}
+
+body {
+  min-width: 0 !important;
+  font-family: var(--vt-mono) !important;
+  font-size: 13px;
+  line-height: 1.6;
+  font-variant-ligatures: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body :is(input, textarea, select, button) {
+  font-family: var(--vt-mono) !important;
+}
+
+/* Faint CRT scanlines on the canvas */
+#Wrapper,
+#Wrapper.Night {
+  background: transparent !important;
+  color: var(--vt-ink);
+  position: relative;
+  z-index: 1;
+}
+
+#Top,
+#Bottom {
+  position: relative;
+  z-index: 2;
+}
+
+/* Digital rain: a fixed glyph field with a falling luminance mask */
+html::before {
+  content: ".*.ﾉﾈ+ﾈｽ.ﾗﾃｼｶ5.ﾅｲｹｸｵﾉﾏｴ*ﾚ:ﾊﾎﾖ>ｱｻ=ﾔ7ｻﾑﾙﾎﾕｴｹｾ6ｾﾖ4ｹｳｱﾌﾋｷ+358ｺﾊﾓﾜｼﾘﾛｲ7ﾀﾂﾐｽｲｸ*<ﾇﾉ.ﾉﾁ84ｿ58ﾌｱﾓﾗｳﾋﾈ5ｽｶﾃﾌ:ﾒｲﾛﾖ4ｺｺｼﾋﾐｲ22=ﾁ-ﾂ4ﾈﾄﾘﾎﾐﾉﾅﾊ4-ｻ8ｷｾｾｵﾑﾏ5ﾑ8<ﾖﾇｹﾁﾎ-ｺﾔﾌﾋｳｹﾓ7.ﾐｸｶﾇﾕ2ﾁｼ1ﾂ.ﾛﾂｵｳ+0ﾘｵｳｺ-ｹﾘﾙﾂｺｺ.2ｶﾁﾜ0ｻ+ｺ8ｴ>ｲ33ｲｺｻｼｿﾑ8ﾛ4=:*ｻｴﾘｼ-ｳﾎｿ><ﾑｲ2ﾗﾃﾊﾆﾜ:>ﾏﾚ6ﾑﾊZﾊﾌ4ﾍﾙﾋﾂﾂ>ﾝｶｹﾔﾆｿ.+ﾔﾌ73>ﾙ.ﾚｺｵﾔｶﾔ0ﾘｳﾂ6=ﾉｴﾓﾏﾃｷｿ.ｾ2ｺﾊﾊ+ﾑﾇｲ+ｵﾇﾍﾓﾝ¦ﾅ5ﾍｼ74ﾁ.=ﾊｱ3¦ﾜ*ﾚﾋｽﾀﾌﾐ4ｼﾘﾚﾒｳﾝ¦ｻｵ:ﾜ8ﾔ<ｴﾌｹ9ｵﾇﾛﾂ+ﾄ:>ｼﾍ:ﾖﾆﾑﾘ3ﾋﾗﾃﾓ>ﾊ7ｿ¦ｱ3ｴｶ6ﾀ<ｼﾆｹ=76ﾓﾐ+>ﾁﾜZ+ﾙｾﾉ8ｴﾒﾁｳｵﾉﾄﾎｲﾕﾚ0ﾐ>ｾ>ﾀﾑﾊZｳ37ﾅﾋﾌﾌﾂﾎﾝﾈﾙﾙﾉﾌﾉｽﾂﾏﾁｼﾒ4ｽZ8ﾁﾊ6ｳｽﾊ01ｿ¦ﾜ¦ﾉｺ-ｾｴｵ-ﾃﾉﾈｿﾋﾇﾅﾕｽｸﾂ*ｺｽﾚ5*90Zﾋ2ｲｶﾊﾈ7=126ﾉﾆｽｲﾚｻ6ﾉ¦ﾜﾒﾔｿﾅ6ﾂﾛ2Zﾈ6ﾋﾈｺﾜﾗ+ｽｲ0ｷﾎﾓﾗﾜﾌ6ﾈｺ4>ﾌﾀ5ｳｿｾﾏﾑ:6¦ｷﾊ3ｲｽﾒﾑﾔﾜ8ｽ:ｺｶ4ﾅ4+ﾆ>ｸ9>8ﾕ6ﾘ1ﾕ-ﾓﾕﾖｴｲﾐｶﾅ74ｷﾙ5ｷﾙｺﾍ9-ﾑﾐｶｽ*ﾃﾐｿｷ8=ﾀﾋｷ0ﾄﾀ1:ﾂ8=ﾒ81ﾂﾖﾁﾏ-ｿ¦ﾘ¦0ﾔﾓﾉﾔﾏﾉﾐ¦ﾊｶｸｲﾓﾒ9ｴｵｾﾍﾔｺｼﾅﾏ2--0ﾋﾜﾜ>ﾂｺﾀ.ﾌ:9ﾒ4ﾄ2ﾄﾚﾖﾈ92ｽ*ﾚｻｻZ<*ﾗｲｺﾘﾌｻﾗ>ﾚﾕﾃﾍ0ﾚ1ﾀﾚ:ﾔ:ﾘ=ﾙﾍ6ﾐｻ11ｴ154ﾉ24ﾄﾇﾇｼ=ﾕｳﾍｸﾅﾖｳ9ｹﾘｻﾛｻﾔｾﾙｻｴﾃｽ9ﾐﾍ<ﾜ=5ﾝﾜﾛﾂ><ｺｶ7ﾝｱ3ｼ*ｴ1ｲｿ88ﾃﾐﾅ3ﾆﾚﾋ49ﾖﾔｸ+ﾘｿﾗﾄﾇｸ=ｳ-ｵﾙｾﾊﾈ0ﾌﾏ+ﾍ:ﾈﾔ6ﾇﾘ-ﾒ<6ﾜｼ-ﾍ6ｷﾌﾂ4ﾔｸﾏｲ+2.ﾐ8ﾅ8ﾅﾚﾃﾒﾁﾓｷﾄﾇｱﾋﾄﾁｻ0ﾓｽ-*ｻ¦ﾗｳﾉ8ﾉｼ:ﾋｵ7>ﾅﾘﾙﾘ6ｺﾘ*ｹ1ｺﾂｾ5*ﾀ:ｲ3+ﾏﾖｿ=ｲﾋﾄﾖ3ﾗﾜ5ｼﾑﾉﾊ3ｿﾛﾘﾔ+ﾛ.3ｼｾﾃｽﾁﾇﾈﾉ6ｵ*ｼｽﾎｵﾅﾀZ7ｺﾜ9ﾂﾋﾃ4-ﾛ7ｲ6ﾙﾐｳﾒﾛﾉﾜﾘ:ｾ3ﾋﾛﾖｾﾅﾑﾗﾎ0¦ﾃﾊﾊｴﾊｻﾂﾐ-8ﾛﾛｼ1ﾓ*ﾀ.ﾂﾏｹﾒﾆﾛﾃﾀｱﾕ1ﾏ1ﾆﾈｺ=ｵ6ﾈﾂﾘ3ｳﾅﾊ7*ｵﾃ4ﾀ6ﾇﾜﾁﾒﾐﾛｷｵﾃ6>ｾ+ﾝ77ﾕ<*7ZﾀｿﾛZ8ｴﾚｷﾖZ3ﾚﾘｹﾐﾀ.ﾐ¦5ｷ+ｾﾏﾘ5ﾏｹ28ﾆﾍ8ﾀｺｽﾁﾀ=ｱﾖﾐﾗｴﾚﾇｹ:.5ﾃ0ﾎｶﾘｴ=ﾙﾘﾚ>ﾃ+ﾋﾊﾖｸﾊﾙ0+ｳﾇﾊﾏﾉｷｾﾘﾙﾔ8ﾂﾛ:8ｻﾆﾍﾘﾀﾊﾓﾈﾏ¦ﾖﾓ2ｿﾎﾗﾈﾍﾔﾁｼ*ｺ:ｺｶｱﾕﾑ9ｼﾆﾕﾉﾐﾇﾔｴﾈﾄｵ*4ｱ>ｸﾈｹ1ﾚ-ｵﾖ¦ﾇﾆｿZﾏ:ﾑﾏﾒ<ﾍ>ﾒｵﾊｷ.ﾈﾚﾄｳ>Z¦:ﾒｴｺｿﾇﾏﾃｷﾘ9ｶﾙﾒ>ｼﾆ3ﾑﾐﾅ>=ｸﾙ7*1ﾌｶﾁ<ﾂﾃ=ｶｱﾏ7ﾃｼ5ﾗ+9ｺｵﾎﾖﾑﾀﾏ8*ｼﾎ1ﾘﾜﾌｶﾅ6ｸﾜﾇ*5ﾌ33ｷﾌ8ﾝﾐﾈﾅ-ﾋ6ﾌ*ﾘ+.<ﾈ<ﾋ48ｺｷﾔ1ﾔｳﾈﾒ5ﾌﾓｾ1ｸﾄ1ﾂﾏﾀｳﾚ4.ｻ3ﾚﾑｸﾗ5ﾏ<ｶﾉﾄﾁｵﾋﾘ79-ﾂﾒﾙ.3ﾃﾋﾔ.6ﾂ40ﾍｾﾖ2ﾝﾌﾂｶｴ-ｲﾗｹﾌ0ﾀ2ﾏﾒｼ9ﾀ5>ｸ<4ﾛﾕ>ﾔﾍﾅ6ﾊ+ﾆﾝﾏｼﾜ9ﾄ-ﾑﾘｳ5ﾀ1ｹ6ﾓｷ3>ﾗ+ﾚﾑｺｴｵﾝﾚ2ﾗﾒﾈ+4ﾜ1ｴﾌｺｷ78ｹﾔｹ*.34ｵﾂ¦ﾓﾘ>1+ｳﾄﾉﾓﾎﾒﾍﾏｱ5ｱﾏ>ｻﾛﾒﾝｾｳﾙﾋ5ﾅﾉﾅﾅﾛ<ﾖ28ﾕ1>ﾏﾐ1ﾚﾇﾁｹｹｾﾘｿ.-ｶﾅ7-ｷﾝﾑ5¦5ﾑﾑ2ﾚﾈﾛﾋﾁ8ﾁﾓﾅﾁﾊ3ﾖﾎﾈｲ+ﾂﾓﾓ8ﾑ54ﾂｷﾅﾀｶﾉﾕ0ﾀ6ﾛｴ-ﾆ2ｹﾘ:ﾕﾍ57ﾃ4ﾌﾕﾃ:ﾇｾﾑ<Zﾀﾄﾚｳﾓﾃﾔ6ﾔﾚﾎｻ-ﾊ1ﾒｷﾄｹｱﾘｻｱﾈﾜ-ﾂﾊ7-ｵ8ﾝ5ｸﾌﾑﾔﾉﾖﾐ:ｷﾇｴﾆﾀｺﾓ0ｴﾘｹ*ｲﾋｹ1ｲﾒﾐ>6ﾘｽ-67ﾑｴｲﾃﾎﾚ42¦ﾔ1.0ﾘﾔｹﾚｽﾒﾛﾌﾈﾌｷﾁﾗﾋﾇﾝｾﾄﾃ2ﾝﾈZｳｲ6¦ｷ6ｽﾚﾋｳﾇﾚｹｾﾚZ+ﾍ>7ﾇﾓｹ4ﾚﾈ0ｲﾃ3ｸﾌﾝ:9¦ｿﾀ=Z*84¦ﾎ3ｶｵ..ﾕｶｷﾚﾄ*ﾛﾑﾙﾉ+6ｷﾁ<ｿﾎﾈﾃｿｾﾑﾒｹﾈｵﾜﾑﾝ=ﾋｲ9ﾊ<ﾔﾏｺｾ:<ﾏｺ>ｸｹﾄ1ﾇｽﾛｵﾝﾍﾕﾀ8ﾈ4ｴ*<ｺｼﾋﾙﾊZ3ｲﾜﾙﾔﾋﾋﾈﾁﾆ*ｶﾁﾔｿﾒﾝ0ﾘﾊｲｹﾋ1ﾘ7ﾊﾃｺﾓ927ﾔ=ﾂ¦ﾀｽﾝ8ﾏ>ﾀﾕﾀﾕｻ=ﾍ-4ﾊ7ﾍ.ｹ18ﾛﾕ:ﾓﾖｲﾐｲ72ﾁﾑ48ﾔﾜｾｾｽ=ﾋｼ1ｳ2ｴﾝｳﾄ+ｺ1ﾆ*¦ﾙ-ｸﾍｳ5Zﾎｿｸｹ*6ﾌﾋ>2ﾃ5ｽｻｱﾆﾑ+ﾀZ*ﾄｳ21ｴｾﾝ7ｿｽﾗ¦ﾀｹﾏﾁｼﾘﾖ0ﾐﾐ7*ｷﾌ.ﾆｾ=ﾂｾ¦ﾄﾃﾇ7ﾀ7ｲﾎﾄｿ3ﾅﾖｴ6ｿ>ﾗｶ48ﾗｻﾌﾒｿ8ﾛ<ﾋﾂ¦ｽ5ﾗﾓﾒﾍ2ｻ9-40Zﾛ.ｿｷﾘｸﾅ3ﾚ6ﾍｽ2ｵﾙ1-ﾎ<ｲ27ｾｱ0ﾐ12ﾗﾋｸﾙﾈ>ﾀﾝｷｼﾌﾑﾓ926ｼﾕｽｻ5ﾍﾑﾛｵﾙﾄﾄﾕﾕｸ<ｷ5ｻﾂﾜｳﾌｱ-8ﾛｺﾇｻ:ﾂ3.Zﾀ:ﾙｺｿ0ｿﾀ5ﾘｿﾌｽ8ﾚﾂﾀﾄﾔ+7ｵZ3ﾊ>>Z4-ｾﾆﾚﾊｲﾝﾅﾝ34.*0ﾃ-5ﾚｼ<ﾎﾒﾝ7ｶﾑｹﾑ3ﾐﾌZｹﾈ7=4<ﾀﾎﾈｾﾘ¦ﾄｵ0ﾅ<ﾛ<ﾄ.0ﾗｽﾐﾄﾌﾊﾝﾀﾅﾉﾆ2ﾚ1ｾﾖﾒｿﾐ0ｳﾇﾑﾖﾕﾑﾁﾒ<ｺﾓｴﾕﾔﾄ4ﾅﾁｼﾅﾒﾘｷ91ﾎ-.2ﾝﾌ¦ﾓﾝﾎｺｿｺﾗｱｾﾀﾉ2ﾘ0ﾃｸｹﾃｴ7ﾃｺZﾈｼ0>ﾊｾ8ﾂ<ﾉｻ<ｴｼﾂﾗﾑﾛﾍﾓﾄﾄ9ｳ<ﾙﾆｼﾅｵｾｿﾗﾗｴ8ｵﾄﾈｻｱ2ｹﾌ5ﾎ7ﾝﾛﾍﾝ5ｲﾏﾒｷ2ﾛ0=ﾏ8ﾇﾊﾄﾌﾑ.-ﾍﾛﾈﾏﾒﾑｳﾈﾘﾎｹﾗﾛﾋｵﾐｼｻ¦ﾐ:ﾌｶ8ﾂ20ｹｺ4ﾂ8ﾎﾜﾋ3ﾕｹ+ｲｷ>ｵ3ｹ9ﾅﾃｹﾋﾅ>ﾍﾙﾜﾂﾂﾃﾙｶﾉﾏﾂﾏ=22ﾀﾓﾃｺﾈﾝｷﾀﾘﾚﾈﾀﾔ:ﾒｼｻﾍｳｺﾘ¦ﾈﾅﾛｾﾖ-=ﾝ<*ｵﾉﾃ+ｴ:6ｷﾕﾅｶﾇ6ﾌｳｴﾍ9>ｹ*ｴﾈﾜｲﾆﾗｶﾜﾒ2+ﾑﾙﾆ0ﾃ89=ﾑﾛ<ﾎﾅ*ﾕﾆﾙﾏ6ﾅﾜﾕｽｱﾝ-ｿ>3ｱ>6ﾓ>*ｸｼﾙ>-ｸﾃｴﾔ:ｷｻﾔｷﾏ6ｶﾑﾉ¦ｾ90ｸｺ<-ﾄﾖﾙ¦¦ﾜﾊﾌ.ﾗﾁﾐﾔﾗﾇﾀ+ﾗﾐｶｳﾜ+6ｹﾅｿﾒﾕ4ﾘﾑﾈﾒﾁｸZ75ｱﾒ><ﾍ40ｶｳﾅ>ﾎﾎﾀﾄZﾙ*ﾓﾈｴﾓｾﾛﾛｷｴﾖﾗ*ｸﾛｾﾔﾌ<ｹｵｽｷ+ﾐﾕﾊ1ﾏZﾚ5ｹﾜｷ0ﾖ8ﾌ7ﾏ+ｻﾀ9Z+8¦ﾑ8ｲｼﾉﾈｸﾄﾈﾓﾙﾓｶｸ=ｸZｾ+ﾉﾑｸｺｱﾓ*:ﾁ9>ﾐ6ﾏ7ｶｼﾁﾐｸ+6ｳ4ｺ5*ｾﾋﾐ<ﾙﾀﾛﾗｳﾍ76ﾉﾑｵｼﾓ.ﾋ1Zﾋ.Zﾙﾌｳ7ﾗｼ=+=3¦6ｺﾎﾖﾎ=Zﾌﾗﾍｻﾜ5ｳ8ﾝ9ﾒｼ3ﾍ5ﾗﾊZｸ>ｷﾌ5ｹﾜ1-ﾑﾑ7ﾅｴﾂﾚｳﾔﾜ>ﾚﾆ><ﾖ8ﾃｽｷ=*:ｳﾖ0Zｷｺｲﾗﾆ1ﾌ3ﾔﾃ0ｴ256ﾄﾘﾐﾋﾇｴﾀｻｴﾉﾒｳ<ｸｴﾖﾛﾌ1ﾚﾜﾌ+ﾙｴ:ﾕ¦0ﾍﾍﾙﾄﾜ:Zﾇﾈﾆ+0ﾝﾌﾙﾍ-1ｸﾎ>ｷｹｴｽﾚｶ0<4ｹｾ8ｳﾇﾓｶﾄﾚｷ*ﾕﾍｳ0ﾐ1ｱﾐﾖﾗﾒｲｳ1ﾘ8ﾇﾓﾇｿﾅｽ+ﾉﾘ:¦ﾐ741¦ﾒ*:ﾍﾕｳﾖﾗ5ｵｶ=ﾕﾉ2*2=ｼ5¦ﾎﾉｺｿﾐﾛ9ﾘｵﾖ0ｺｿｲﾃ4ｿ.Zｸﾇｹ*ﾐ>ﾌ.ﾜｳｲﾍﾌｺﾐﾘﾛﾇｽﾈﾒﾉﾍﾆｸﾝｵﾂﾊｴﾅ+ﾚﾒﾈﾙｿｱｶﾗ4ﾑ4ﾈ8>ｵﾏﾔﾓﾊｻｹﾑﾈﾏ3ﾖﾀ4ﾙ>ｱｸ7<4ﾀﾑｷｿｴ12ﾛ4ﾃﾈﾋ¦ｲ>ﾏ.ﾉ<ｶｺｵﾁﾉ4*ﾍZ3ﾅ1ｷﾝｹﾃﾔﾅｵｴﾏ3ﾃｼｶﾂﾜｵｿﾎﾕﾈﾉ.ｿZﾊｺﾆｺﾆ37ﾄ3ｽ4ｱ+ﾘｶｴﾉﾛｲ95ﾖﾕﾁﾅ42ｾｶﾒﾕﾗﾖﾐｽﾈ5ﾜﾑｿﾀ81ﾔﾎ-ﾓﾃﾒ6>ｼﾁｸZﾔﾋﾚ4ﾉﾓ.ｴﾒﾈ1¦ﾉﾒﾊ3ﾜｱｿｱｱﾛﾔ+¦ｴｹZﾎ-ﾇ*+8ﾓﾙ5ﾏﾙ*ﾄﾊﾁﾅｵ87ﾈﾉ0ｸ2ｽｵﾂ=ﾑﾑ=2ｿｸｴ+ﾎｽｴﾅｹﾅﾝﾁｼﾝﾀ229ﾏｷﾚﾕ:ﾕ9*ﾌｲ:+ﾒ-ﾅﾓｸﾁ11ｽﾖｺ=¦8ﾔ5-5-0ｻﾀｶ6ｻﾄ:ﾄ9ｽﾎﾃ:ﾖﾘ24ﾌｲｱﾆ-ﾃﾁﾅﾂｿｹﾄﾌﾛ.ﾈｷﾕｷﾛﾃ9ｺｾｵﾛ+6ﾋｶﾇ+>ﾗﾘ8ﾋｺ8ﾅ=ﾈﾚｸ8ｶ¦ﾏﾂﾕﾐﾆﾙﾆﾒﾐﾜ8ﾍ*ｹﾀｽﾎﾆﾐ8><1ﾊ2ｺﾇﾍﾐﾁｼ¦Z7ﾏ271ﾀﾑ0*0ﾓﾄﾕ4ｶﾑ4ﾙｽﾇﾗ3ｿﾃｻﾑ<ﾍｽｹ0+ﾊﾖ9ﾔﾘ-ｴﾋﾚ>ﾉｲﾀ8ｺｻｲﾏ=*<ﾙﾙｵ8:0ﾒﾂ1ﾀﾁﾜｼﾇｽ¦ｼﾇ7ﾅﾗﾙﾖﾖｻ=ｵ+ﾁﾙﾀﾅ7:ｼﾃｷﾅﾘｿ:ﾂ*ﾆﾔﾛｾﾛ8ｱ>3ｼﾌｹﾝﾓﾈ7ﾛﾋ9*ｶﾑｸ*ｾﾂﾊ<ｱﾌ3ﾅ+:ﾇ>ﾋﾀ1ﾆ9ﾎｼｱ+ﾁ0ｼﾏﾕﾝZ=ｴ*2=¦ﾚﾃﾄｶ40ｵｻ9ﾍﾝｴｻﾙﾍ2ｿﾘﾂｸ3ﾜﾇﾈｾﾜｲ:ﾎﾈｻﾊﾉ3ﾙ+ｼﾗｶ.<0ｼ+ｽﾒｹﾗﾜｽﾆﾛﾊﾍﾀ=ﾗ:ｺﾙﾋｼ8ｵｷﾖﾕﾖ86ｺ8ｺ7ﾐ6ﾜ:ﾎ>ｹｷﾘ7ﾓﾖ6ﾖ2ｳ=ｶﾛ<3ｼﾓｷｱﾖﾗﾅｿﾏｴ-ｳｴ1ｱ:ﾅｴ8ｽ6>ｽﾝ4ﾓ¦4ﾃﾗ*ｷｷ+ﾁ3ｱﾆﾓﾃ<ｿﾘZｱﾛﾍ3ﾔｻ7*ｸｺｵ:-ﾐﾜﾆｾ3*ﾀ.ﾁﾓ¦ｿﾈﾛ47+Zﾂﾘｳﾎﾐﾊ=-ﾝﾖﾘｳﾁｼﾋｶﾏｽﾐﾀｻﾒｾ:ﾔ+ﾁﾝﾓﾚﾂﾃﾑﾌﾇﾍｿｵ7ﾛｺｸｶ5ｸ<ｷ.ﾊﾙZ2ｸｹ36*ﾋﾄ.:ｾﾅｱ5ﾐﾎﾂﾍ8ﾂｳﾇﾘﾇ0ｻﾜｺﾝｷｷ*<ｺ*=ｲﾆ11ｸｱﾚ<<ﾊｵﾋ*5ｲﾚﾝｸ5ﾙﾔｹｽﾘ5ﾀｼ90ｶﾜﾊﾗﾍﾚｲﾗ8ﾖﾜ<ﾓ0ｹ7ﾝﾕﾂﾘ3ｸﾝﾁﾐｽﾅｾ:*ﾂ4ﾙﾓｸ:4ｹｳﾒｽﾌﾆﾗ=9ﾙﾋﾑ0ｼｺ-ｽﾁﾍｱﾁｸ>.>ｴ.ﾓｶｱ*ｿﾛﾇ8ﾛﾁ7ﾔﾕﾖﾝｻ51ﾋﾉｱｽｼ<ｸ+ﾅｷﾛ4ﾖﾓﾎｻﾍｳﾃｴﾅ>872ﾙﾘﾉZｾ*ｴ0ｷﾐﾁﾎﾚﾊﾐﾖﾄ¦>ｾﾌ>ｷ2ﾌｹﾆﾖｶｱ0ｻ0ｶﾋZﾏﾍｽ0ﾗｸﾁ:ｽﾒ:ﾀﾐ5ﾒｱ3ﾏ.ﾃ<ﾍﾊﾀ-ﾕﾍｼﾝ8ｷﾀｷ*4ﾏﾆｹ.ﾋｱﾐﾁ+ｻﾝ+8ｿｲﾂﾕﾂｴﾑﾂﾗ.ﾃ6<ｴﾅ<ﾈ>ﾌﾙﾝﾊｸ:=+:ﾂﾖﾔZﾖﾉﾓﾗｹ¦ﾃｹ1*ｻ8-ﾋｻ3=¦:ｸﾀ7ﾃ=ｹﾂﾀｻ9ｾﾂｾｺｺ:ﾅﾔｷｳﾊﾝZｽﾂｹﾒﾅｶﾌﾝ7ﾋ+ﾋﾌｳ7ｴｼ6ﾄｲﾝﾜﾐﾈﾊﾔﾖﾒﾊﾒﾌﾝﾆｴﾑｵﾘｿｶﾐﾏｹｽﾉﾃ*ﾓﾉ1ｱﾇﾐﾎﾚｽ3ﾕﾐ5ﾆﾍｴﾐ1ﾀZﾂﾖｵﾆﾏﾖﾀ:ﾘｾﾖｳ5=+ﾇｻﾎﾔﾊｱﾉｻﾇﾇ-+ﾃﾖ¦*ﾌﾔｽﾗﾓﾋﾕﾘ2Z>ﾈ0ﾃ¦>ﾜﾅ4:ｼﾀｳﾙﾎZ<1ﾓｼｷ9--ﾆ50ﾗﾆｴﾄﾇﾈﾆﾍﾖｼ.ｱﾊ.ｺ=ﾅ02:ﾕｿ+ｱ9ﾚﾉﾓﾜｶﾏ<ﾝﾕ>ﾅ:ﾎﾋ:ﾎ9ﾝﾓ*+ﾇﾏﾛ1ﾑZZ>ﾑﾒ3:569ﾃZﾎﾄﾉｼ0ﾀｲｷﾔｴﾇ>ｾ*ｳﾆﾚｲｷ5ﾙ+<ﾏｾｵﾏ+21-ｿ89-ﾍﾊﾅ<<ﾓﾎｸｼﾏｸﾈﾛ¦5ｾﾎｲﾒｵﾛﾏ-=ﾊﾇﾑｻｾｵｿｻｶｴﾊﾒ.ﾚﾃ*ﾎ:ﾊZﾐｳｾﾁｻ¦ﾍﾈﾑﾕｱ2Z.ﾒｲ>6ﾒﾀ6ﾚ7ﾙｹ05ﾍ0ｱ-ﾗﾃ=ﾑ6ｳﾐﾙZ92ｾ<<ﾑﾗ9-ｻ0ﾄﾀ5ﾍﾁｴﾂﾗ2ｲ>ﾆｶ*ｹ.ﾎｳ¦ﾎ*ｳﾈﾈﾍｹﾉﾕ>=8-7*1ﾊｻﾐｾｹﾕﾐﾄZ09ﾏﾇﾗｱﾂﾙ*ﾙ¦.ｹ9ｳ7..ﾕﾙﾋﾓ8ﾎ91ﾔｲﾔ+ﾂｺｺﾔｳﾄｹﾗﾝﾇ¦ｽ3ﾍ>ﾛﾖﾃ.ﾑｸ8-3ｹﾈﾖｹ2>ｶﾜ*ﾎﾋﾂﾓﾑ+ﾏ*ｶ08ﾄﾑﾉﾀ4ｴ=6ﾂ2ﾚﾕﾝﾐﾊZ6ﾇｼｿﾄﾗ423ﾐﾛﾗ1ﾐﾅﾅ6ｼﾖ0ﾒﾇ9ﾋｾ>ﾓ4.7ﾆ=ｹｴ1ﾚ61ｱ<ｺ9ｲ<ｷｻﾃﾙﾏﾄ7.ﾐﾓﾘﾛﾝﾚﾐｸｻﾛ>ｼｷﾇ3ﾗﾎﾈ8ﾕｿ2ｴﾅｽ<ｻﾂ<ﾅﾗZ¦ﾘ2ﾕｴｵ4ﾉｾZﾄｺ=ﾒZﾂﾓﾃ-ｾﾆ=:ｶｱﾖｿ4-ﾚﾕﾏﾙﾖﾜ5*ｱ1ｸｵ4ﾗｷｾZ7ｽﾜ.ﾋ<<9ﾎｸﾐﾆ+ﾛ435.ｴ*ﾆﾓﾄｻ¦=ｻｶ<ﾕｷ7ﾇﾙﾊ>ｵ4ﾈ+ｾﾈﾇ=ﾋﾆ=ﾓ>ﾈﾆﾙｶｸﾌﾑ9=ﾃﾀ*ﾘｹﾕｻｸｿﾈﾗﾇｵﾈｺ1ｿｵ37ﾀﾎﾒｻ4ﾋ4-ｲﾇﾙｵﾅ3ﾍ:ﾓﾅｺ=ｻﾑﾀｻ.¦*ｱ*7.ﾇﾛ:ﾂﾓ:>ﾝｴﾗ*ﾍﾆ:ﾌﾔ1ﾕｻﾚｸﾂｹﾔ*ｴﾗ-ﾋｲ0.Zｷﾌｴｺ<:ｼﾗﾁﾍﾄ-ﾒ1-ﾔﾉZﾒ2ﾋ¦3ﾗﾙ0ｱﾓ0ﾂﾁﾇｽ4<ﾜ2ﾚｷﾐｿ3ﾚﾗｲZﾘ3ﾌ.ｻﾗ+ｸﾕｴﾜｽｻｻｼ*ﾆ0ｼﾖﾀ¦ｺﾌ-ﾆﾃｻ5Z6ﾕｷ6ｿﾀｺｾ+8ﾍﾏﾌ6ﾃﾝﾂ2ｲ-ｺｻ90ｸ:ﾊ4=ﾃｲ0ｹﾙﾂ5ﾌ>ﾘ5ｷ-.ﾃﾇ6ﾖｵｽZﾍ7ｺ=ﾈﾈ-ﾇﾑﾃﾍｱﾉﾏｴﾁﾗﾌﾘ¦ﾓﾎ6ﾏ<ｻﾑｸﾕ*ｼﾃﾔﾃ.¦ｱ9491ﾈﾘｹﾐ-ｳｱ.-ﾙﾎ*ﾊ>=0ﾜｿ0ﾃﾁﾝﾇ89ｿﾖｴﾑ->ｶﾀ2+ｲ+=1ﾗﾏﾉｸ¦ﾘﾍ1>ｱﾙﾋﾇ5>+ﾝｿ4ﾛｼ:ﾅ¦¦ﾒZﾒ+ｺﾌｵﾎ3ﾍ<ﾅﾍｼｹｸﾖﾁｴ<ﾖ¦ﾘﾘﾄﾇｽﾘﾔﾔﾗｽﾇﾕﾒﾚ2ﾄｸｼ4*ﾌﾀｵﾓ1ｻｼｴﾜﾃ<¦ｸ¦ｻﾄﾉ=ｵﾏﾖｷﾊｻﾚｼｼｸﾙﾈ8ﾛﾆｺｲｹﾁ1ﾉﾄﾂﾎ:ﾌｻﾍｲ0ｱ8ﾁｿﾓﾎ+ｸｿﾀ6ﾁｺｼｸﾕ..6ﾛﾝ¦ﾋﾏ2ｶﾌｴﾉﾝ8-:ﾍ+ﾌﾑ7.ﾑｻ=ﾋﾑｾﾖｴﾜｴﾊﾝ4ｶﾌﾏﾒﾈﾄｲﾂｵﾉｱﾙ3ﾇｺｳｸｴﾜﾈ9ﾚｱﾚﾝﾁｲﾋ7ﾙｸﾇﾛｿﾗ:ﾙﾍﾐｽﾁﾙ0ｹﾎｷ6ｿ<ﾔﾇﾏｶｲｼｵﾋﾗｳﾗﾙ><ｼｱ5ﾐﾇﾝﾚｷ6ｱ9-ﾁｸﾒﾖｽ79ﾁ¦3ﾜ7:ﾑｻﾒﾇ0ﾊﾁ-0>.4ﾙ21ﾍｹﾂﾘﾌﾄｳｼﾗﾒﾛ:ｼﾀZ3*ﾙｼ>ﾉﾂ7ｷﾖ>ﾌﾚ6ｼ7ｸ<ｾﾃ2ｽﾐｻｶﾋﾜ0ｺﾁZﾅ:ｷｻﾛ>ﾇ¦ﾐ7ﾒｸﾎ=ﾙﾛｻZﾖ¦ｽﾔｷﾜﾐ0ｾﾎﾙﾆ3*ｵ4ﾓﾋﾎｾｽｺ*ﾖﾓ3ｻ5ﾝﾜｼﾛｹﾎ1ﾒｱｻﾋｽﾆ2ﾅ*ﾈ0ﾃﾖﾏ1ｳｴ1ｵ3ﾔﾀ-24ﾑﾔﾖﾎﾛｼ>ｿ¦>ﾊ6ﾋｶｳｵｿ=ﾀｶﾝ+ｺﾌｺｴﾀｱﾍﾂﾊｱﾐｲﾄ.5ﾙｻﾛｵｵ9:ｵｴﾍ.ﾖ-+8ﾍｱ:ｻZｼｽｲｿﾙﾗﾋﾌﾁｶｿﾕ68ｺ+ｹﾜﾅｴﾐﾉﾈ0ﾆﾄ2ﾅ-ﾌ>ｳﾀ99ｼ:7ﾎｾﾙｵｸｳﾖｸﾚ67ｹ->ﾜｵ*ﾅｹﾎｴﾅｳﾝｳ+3ｿ4ﾀﾍﾏ07Zｹｽ+9=ﾒ*ﾙ6+ｸ4ﾉ:ﾂｲﾓﾊ4-=2ﾅ4¦¦ﾇﾋ9ﾋ2ｴﾑ<ﾒ.ﾖﾏﾆ¦ﾖﾁ=2=ｻ<6ｴ.-6ﾜｼﾆﾜﾇ7>7¦ﾑｱｷﾋ>ﾑﾁ*ﾝ¦ﾂｿ=ﾊ37ｱﾒｱ¦ｳﾕ*>ﾚﾁ*:ｳ2ﾓﾍﾜｺ8ｴ5ﾖﾆｺ:ﾚﾙﾉﾙ8ﾝﾇ>1ﾑ87¦6ﾘﾑ-:4ｹｽｽﾔ8ｽﾆﾗﾑﾃﾔ=2ｵﾇ559ｼﾋｲｶｹﾍﾁ:ﾝﾖﾇｻﾒﾇ+3¦+ﾗﾓｿ<ｻｺ.ｷｻﾏﾖ<*¦ﾋﾄﾝﾑ1ﾅﾜ*ﾁ:ﾓｶﾐﾗｾｹｸﾐﾚﾎ:ｴﾏ<42ﾍｵ0ﾒﾇ13ﾋﾘｲ++ｷﾈﾝﾀﾃﾀ.ｾﾌﾀ3ﾗ87ﾇﾋﾗｸﾁｹZﾋﾁ-ｿ=ｴﾓ2.>ﾗ3ｹ4ﾊｵ>ﾔﾄ7ﾁｿ1.ｲﾏﾏｵﾓ>ﾗ¦49ｾZﾋﾔﾛﾊ*ﾏﾚ9ﾓ¦ﾀﾒﾚﾖ4ｱｵ+=ﾂ4+ﾂﾘ0ｳｾｸﾏ2ｹ0ﾝﾅｼﾎﾗﾘ<ﾌ+ﾔｲﾛﾔﾘﾑﾈﾂｲｹﾂｳﾌﾕ¦7ﾑ<*ﾜﾗｽﾗｺﾅ9ｱZﾕﾀﾜ-ﾌﾒZﾜZｷ1<=ｳﾓ:ﾒｺﾒ1ｴ4ｽﾗﾙﾓﾖﾕｵﾗ-ｶﾎｸﾈﾏﾒ1ﾀﾔﾚﾍｺﾑｻﾍｺ-7ｽ69ｺﾒｳ3ｲﾈｾﾚﾄｾ6ﾃﾋZｴﾌﾉﾚ<ｲ5ｲｸｽｱﾒﾊﾀﾁｿﾐﾀ3ﾜ7ﾄﾝ¦ﾊ1ﾙ-ﾇ.ｵ.ﾀﾆｿﾜｸﾑﾂﾁﾙﾆ+¦+*ﾌﾊﾄﾂ36ﾗZﾖ93ﾓｻｵﾌ7ｳ93ｸｶ.ｽｸ0ﾜﾐﾄ10ｳﾁｽﾑ=3ﾜﾔ7ﾑﾊ9ﾒ.ﾕ¦ﾝ8ﾍ3ﾆ>ｼﾘ+7ｶﾁ97¦ﾋ¦ｵﾚ-ﾚﾀｲ7ﾆ*ｾｲﾚﾝ1ﾕﾄ8ｴｿﾄ:ﾅﾇﾃﾄｳ6ﾍ¦ｹﾀ+*ﾐﾓｸｴ1.ﾕ3ﾉｶﾇ13ﾎ6ﾛ2ｳﾏｿ4ﾆ0ｵﾑﾀﾒﾈ>Zｷｷﾕﾘｳﾔ";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  word-break: break-all;
+  font: 15px/26px var(--vt-mono);
+  letter-spacing: 3px;
+  color: #00ff41;
+  opacity: 0.16;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.8);
+  -webkit-mask-image: repeating-linear-gradient(180deg, transparent 0, #000 120px, transparent 260px, transparent 340px);
+  mask-image: repeating-linear-gradient(180deg, transparent 0, #000 120px, transparent 260px, transparent 340px);
+  -webkit-mask-size: 100% 340px;
+  mask-size: 100% 340px;
+  animation: vt-rain 6s linear infinite;
+}
+
+/* CRT scanlines over everything */
+html::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+}
+
+@keyframes vt-rain {
+  from { -webkit-mask-position: 0 0; mask-position: 0 0; }
+  to { -webkit-mask-position: 0 340px; mask-position: 0 340px; }
+}
+
+@keyframes vt-blink {
+  50% { opacity: 0; }
+}
+
+::selection {
+  background: var(--vt-accent);
+  color: var(--vt-on-accent);
+}
+
+a:any-link {
+  color: var(--vt-ink);
+  text-decoration: none;
+}
+a:any-link:hover {
+  color: var(--vt-accent);
+  text-decoration: none;
+}
+
+#Wrapper > .content::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+/* ============================================================
+ * 3. Top bar — status-line style
+ * ============================================================ */
+#Top,
+#site-header {
+  background: var(--vt-solid) !important;
+  border-bottom: 1px solid var(--vt-line) !important;
+  box-shadow: none !important;
+}
+
+#Top .site-nav {
+  display: flex;
+  align-items: center;
+}
+
+#Logo {
+  background-image: none !important;
+  width: auto !important;
+  height: auto !important;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--vt-mono);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  filter: none !important;
+}
+#Logo::before {
+  content: "v2ex";
+  color: var(--vt-on-accent);
+  background: var(--vt-accent);
+  padding: 2px 6px;
+}
+#Logo::before {
+  box-shadow: var(--vt-glow);
+}
+#Logo::after {
+  content: "wake up, neo";
+  color: var(--vt-accent);
+  padding-left: 8px;
+  text-shadow: var(--vt-glow);
+}
+#Top .site-nav > a:has(#Logo) {
+  display: inline-flex;
+  align-items: center;
+}
+#Top .site-nav > a:has(#Logo)::after {
+  content: "_";
+  color: var(--vt-accent);
+  font-weight: 700;
+  margin-left: 1px;
+  text-shadow: var(--vt-glow);
+  animation: vt-blink 1s steps(1) infinite;
+}
+
+#LogoMobile {
+  filter: var(--vt-logo-filter);
+}
+
+:is(#Top, #site-header) #search-container {
+  background: var(--vt-canvas) !important;
+  border: 1px solid var(--vt-control) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+:is(#Top, #site-header) #search-container:focus-within {
+  border-color: var(--vt-accent) !important;
+}
+:is(#Top, #site-header) #search-container::before {
+  filter: brightness(0) invert(0.55) sepia(1) hue-rotate(80deg) saturate(3);
+}
+#search-container #search {
+  background: transparent !important;
+  color: var(--vt-ink) !important;
+  font-family: var(--vt-mono) !important;
+  caret-color: var(--vt-accent);
+}
+#search-container #search::placeholder {
+  color: var(--vt-dim);
+}
+#search-container #search-result,
+#search-container .search-item {
+  background: var(--vt-surface) !important;
+  color: var(--vt-ink) !important;
+  border-color: var(--vt-line) !important;
+  border-radius: 0 !important;
+}
+
+:is(#Top, #site-header) a.top:any-link {
+  color: var(--vt-muted) !important;
+  font-family: var(--vt-mono);
+  padding: 2px 4px;
+}
+:is(#Top, #site-header) a.top:any-link:hover {
+  color: var(--vt-on-accent) !important;
+  background: var(--vt-accent);
+}
+
+/* ============================================================
+ * 4. Boxes — window panes
+ * ============================================================ */
+#Wrapper .box,
+#Top .box {
+  background: var(--vt-surface) !important;
+  border: 1px solid var(--vt-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--vt-ink);
+}
+
+#Wrapper .box:empty,
+#Wrapper #pro-campaign-container:not(:has(> *)) {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#Wrapper .box > :is(.cell, .inner, .header, .subtle):not(.reply-threads-d > .cell[data-depth]):not(.reply-threads-f.reply-lines-on > .cell[data-reply-id]) {
+  border-color: var(--vt-line) !important;
+}
+
+#Wrapper .box > .cell,
+#Wrapper .box > .inner {
+  background: transparent;
+  border-bottom: 1px dashed var(--vt-line);
+}
+
+#Wrapper .box > .header {
+  background: var(--vt-fill) !important;
+  border-bottom: 1px solid var(--vt-line) !important;
+  color: var(--vt-ink);
+}
+
+#Wrapper .box > .subtle {
+  background: var(--vt-fill) !important;
+  color: var(--vt-muted) !important;
+  border-top: 1px dashed var(--vt-line) !important;
+  border-left: 2px solid var(--vt-amber) !important;
+}
+
+#Wrapper .sep20,
+#Wrapper .sep10 {
+  background: transparent;
+}
+
+/* Sidebar */
+#Rightbar .box > .cell:first-child:not(:has(img.avatar)) .fade,
+#Rightbar .box > .cell > .fade:first-child {
+  color: var(--vt-accent) !important;
+}
+#Rightbar .box > :is(.cell, .inner) > a.item_node:any-link,
+#Wrapper a.item_node:any-link {
+  display: inline-block;
+  background: var(--vt-fill) !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-line);
+  border-radius: 0 !important;
+  font-size: 12px;
+  margin: 0 4px 6px 0;
+}
+#Wrapper a.item_node:any-link:hover {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+  border-color: var(--vt-accent);
+}
+
+#Wrapper .balance_area {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  background: var(--vt-fill) !important;
+  color: var(--vt-amber) !important;
+  border-radius: 0 !important;
+}
+
+#Rightbar .box:has(a.super.button[href="/signup"]) {
+  border-color: var(--vt-accent) !important;
+}
+
+/* ============================================================
+ * 5. Tabs — bracketed tmux window list
+ * ============================================================ */
+#Wrapper #Tabs {
+  background: var(--vt-fill) !important;
+  border-bottom: 1px solid var(--vt-line) !important;
+}
+
+#Tabs a.tab:any-link,
+#Tabs a.tab_current:any-link,
+#Wrapper :is(a.tab, a.tab_current)[href^="/settings/"] {
+  border-radius: 0 !important;
+  font-family: var(--vt-mono);
+  font-size: 13px;
+  padding: 3px 8px;
+  margin-right: 2px;
+  line-height: 1.6;
+}
+
+#Tabs a.tab:any-link,
+#Wrapper a.tab[href^="/settings/"]:any-link {
+  background: transparent !important;
+  color: var(--vt-muted) !important;
+}
+#Tabs a.tab:any-link:hover,
+#Wrapper a.tab[href^="/settings/"]:any-link:hover {
+  background: var(--vt-hover) !important;
+  color: var(--vt-accent) !important;
+}
+
+#Tabs a.tab_current:any-link,
+#Wrapper a.tab_current[href^="/settings/"]:any-link {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+  font-weight: 700;
+}
+#Tabs a.tab_current::before,
+#Wrapper a.tab_current[href^="/settings/"]::before {
+  content: "*";
+  margin-right: 2px;
+}
+
+#Wrapper #SecondaryTabs {
+  background: var(--vt-surface) !important;
+  border-bottom: 1px dashed var(--vt-line) !important;
+  color: var(--vt-dim);
+}
+#SecondaryTabs a:any-link {
+  color: var(--vt-cyan) !important;
+}
+#SecondaryTabs a:any-link:hover {
+  color: var(--vt-accent) !important;
+}
+
+/* ============================================================
+ * 6. Topic list rows
+ * ============================================================ */
+#Wrapper .box > .cell.item {
+  background: transparent !important;
+  border-bottom: 1px dashed var(--vt-line) !important;
+  position: relative;
+}
+#Wrapper .box > .cell.item:hover {
+  background: var(--vt-hover) !important;
+  box-shadow: inset 2px 0 0 var(--vt-accent);
+}
+
+#Wrapper .item_title {
+  font-size: 14px;
+  font-weight: 500;
+}
+#Wrapper .item_title a:any-link {
+  color: var(--vt-ink) !important;
+}
+#Wrapper .item_title a:visited {
+  color: var(--vt-dim) !important;
+}
+#Wrapper .item_title a:any-link:hover {
+  color: var(--vt-accent) !important;
+}
+#Wrapper .item_title::before {
+  content: "> ";
+  color: var(--vt-dim);
+}
+#Wrapper .cell.item:hover .item_title::before {
+  color: var(--vt-accent);
+}
+
+#Wrapper img.avatar {
+  border-radius: 0 !important;
+  outline: 1px solid var(--vt-line);
+  filter: saturate(0.6) contrast(1.05);
+}
+
+#Wrapper :is(.topic_info, .ago, .gray, .fade, .snow, .chevron) {
+  color: var(--vt-dim) !important;
+}
+#Wrapper .topic_info strong a:any-link,
+#Wrapper .topic_info a:any-link {
+  color: var(--vt-muted) !important;
+}
+#Wrapper .topic_info strong a:any-link {
+  color: var(--vt-cyan) !important;
+  font-weight: 400;
+}
+
+#Wrapper :is(a.node, a.tag):any-link {
+  background: transparent !important;
+  color: var(--vt-magenta) !important;
+  border: 1px solid currentColor;
+  border-radius: 0 !important;
+  padding: 0 4px;
+  font-size: 11px;
+}
+#Wrapper :is(a.node, a.tag):any-link:hover {
+  background: var(--vt-magenta) !important;
+  color: var(--vt-on-accent) !important;
+  border-color: var(--vt-magenta);
+}
+
+/* Reply count pills as [ 13 ] */
+#Wrapper :is(a.count_livid, a.count_orange, a.count_blue, a.count_green):any-link {
+  background: transparent !important;
+  color: var(--vt-muted) !important;
+  border-radius: 0 !important;
+  font-family: var(--vt-mono);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 1px 2px;
+  font-variant-numeric: tabular-nums;
+}
+#Wrapper :is(a.count_livid, a.count_orange, a.count_blue, a.count_green):any-link::before {
+  content: "[";
+  color: var(--vt-dim);
+}
+#Wrapper :is(a.count_livid, a.count_orange, a.count_blue, a.count_green):any-link::after {
+  content: "]";
+  color: var(--vt-dim);
+}
+#Wrapper a.count_orange:any-link:not(:visited),
+#Wrapper a.count_blue:any-link {
+  color: var(--vt-amber) !important;
+}
+#Wrapper a.count_green:any-link {
+  color: var(--vt-accent) !important;
+}
+#Wrapper :is(a.count_livid, a.count_orange, a.count_blue, a.count_green):any-link:hover {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+}
+
+/* Hot topics */
+#TopicsHot .item_hot_topic_title a:any-link {
+  color: var(--vt-ink) !important;
+}
+#TopicsHot .item_hot_topic_title a:any-link:hover {
+  color: var(--vt-accent) !important;
+}
+
+/* Plane headers with inline colours */
+#Wrapper .box:has(> .inner > a.item_node) > .header:has(> .spacer + span[style]) {
+  background: var(--vt-fill) !important;
+  color: var(--vt-ink) !important;
+}
+#Wrapper .box:has(> .inner > a.item_node) > .header:has(> .spacer + span[style]) span[style] {
+  background: transparent !important;
+  color: var(--vt-amber) !important;
+}
+
+/* Node navigation (inline colours) */
+#Wrapper .box .cell table td span.fade,
+#Wrapper .box .cell table td a:any-link {
+  background: transparent !important;
+}
+#Wrapper .box > .cell table td[align="right"] .fade,
+#Wrapper .box > .cell > table td > span.fade {
+  color: var(--vt-amber) !important;
+}
+
+/* ============================================================
+ * 7. Topic detail
+ * ============================================================ */
+#Wrapper .box > .header:has(h1) {
+  background: var(--vt-surface) !important;
+  border-bottom: 1px solid var(--vt-line) !important;
+}
+#Wrapper .header h1 {
+  color: var(--vt-ink) !important;
+  font-family: var(--vt-mono);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+#Wrapper .header h1::before {
+  content: "# ";
+  color: var(--vt-accent);
+}
+
+#Wrapper .topic_content,
+#Wrapper .reply_content {
+  color: var(--vt-ink) !important;
+  font-family: var(--vt-mono);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+#Wrapper .topic_content :is(h1, h2, h3, h4) {
+  color: var(--vt-accent) !important;
+  border-bottom: 1px dashed var(--vt-line);
+  font-family: var(--vt-mono);
+}
+#Wrapper .topic_content :is(h2, h3)::before {
+  content: "## ";
+  color: var(--vt-dim);
+}
+
+#Wrapper :is(.topic_content, .reply_content) a:any-link,
+#Wrapper .markdown_body a:any-link {
+  color: var(--vt-cyan) !important;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+#Wrapper :is(.topic_content, .reply_content) a:any-link:hover {
+  color: var(--vt-accent) !important;
+}
+
+#Wrapper :is(.topic_content, .reply_content) :is(code, kbd) {
+  font-family: var(--vt-mono) !important;
+  background: var(--vt-fill) !important;
+  color: var(--vt-amber) !important;
+  border: 1px solid var(--vt-line);
+  border-radius: 0 !important;
+  padding: 0 4px;
+  font-size: 0.92em;
+}
+
+#Wrapper :is(.topic_content, .reply_content) pre {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: auto;
+  background: var(--vt-canvas) !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-control) !important;
+  border-left: 3px solid var(--vt-accent) !important;
+  border-radius: 0 !important;
+  padding: 12px 14px !important;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+#Wrapper :is(.topic_content, .reply_content) pre code {
+  background: transparent !important;
+  border: 0 !important;
+  color: inherit !important;
+  padding: 0 !important;
+}
+
+#Wrapper :is(.topic_content, .reply_content) blockquote {
+  background: var(--vt-fill) !important;
+  color: var(--vt-muted) !important;
+  border-left: 3px solid var(--vt-amber) !important;
+  border-radius: 0 !important;
+  margin: 10px 0;
+  padding: 6px 12px !important;
+}
+
+#Wrapper :is(.topic_content, .reply_content) :is(ul, ol) li::marker {
+  color: var(--vt-accent);
+}
+
+#Wrapper :is(.topic_content, .reply_content) hr {
+  border: 0;
+  border-top: 1px dashed var(--vt-control);
+}
+
+#Wrapper :is(.topic_content, .reply_content) table :is(th, td) {
+  border: 1px solid var(--vt-line) !important;
+  background: transparent !important;
+}
+
+#Wrapper #topic-replies a.dark:any-link,
+#Wrapper a.dark:any-link {
+  color: var(--vt-cyan) !important;
+  font-weight: 700;
+}
+#Wrapper .no {
+  background: transparent !important;
+  color: var(--vt-dim) !important;
+  border: 1px solid var(--vt-line);
+  border-radius: 0 !important;
+  font-family: var(--vt-mono);
+}
+
+#Wrapper :is(.topic_buttons, .cell.buttons, .inner.buttons) {
+  background: var(--vt-fill) !important;
+  border-color: var(--vt-line) !important;
+}
+#Wrapper .topic_buttons a.tb:any-link {
+  background: transparent !important;
+  color: var(--vt-muted) !important;
+  border: 1px solid var(--vt-control);
+  border-radius: 0 !important;
+  text-shadow: none !important;
+}
+#Wrapper .topic_buttons a.tb:any-link:hover {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+  border-color: var(--vt-accent);
+}
+
+#Wrapper :is(.page_normal, .page_current) {
+  border-radius: 0 !important;
+  font-family: var(--vt-mono);
+}
+#Wrapper .page_normal:any-link {
+  background: var(--vt-fill) !important;
+  color: var(--vt-muted) !important;
+  border: 1px solid var(--vt-line) !important;
+}
+#Wrapper .page_current {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+  border: 1px solid var(--vt-accent) !important;
+}
+
+/* Thanks / heart icons and misc */
+#Wrapper .thank_area,
+#Wrapper .small.fade {
+  color: var(--vt-dim) !important;
+}
+
+/* Threaded replies — keep native padding, only recolour */
+#topic-replies .box.reply-threads.reply-threads-d .cell[data-depth] {
+  background: transparent !important;
+}
+#topic-replies .reply-threads-d > .cell[data-depth]:not([data-depth="0"]) {
+  background: rgba(255, 255, 255, 0.012) !important;
+}
+#topic-replies .reply-threads-d > .cell[data-depth] + .cell[data-depth="0"] {
+  border-top: 1px solid var(--vt-line) !important;
+}
+#topic-replies .reply-toggle,
+#topic-replies .reply-tree-more,
+#topic-replies .reply-tree-folded {
+  color: var(--vt-accent) !important;
+  background: var(--vt-surface) !important;
+  border-color: var(--vt-control) !important;
+  border-radius: 0 !important;
+  font-family: var(--vt-mono);
+}
+
+#Wrapper a.reply-strip,
+#Wrapper .reply-parent {
+  background: var(--subtle-blue-background-color) !important;
+  border-left: 2px solid var(--vt-cyan) !important;
+  border-radius: 0 !important;
+  color: var(--vt-muted) !important;
+}
+#Wrapper .reply-strip-who {
+  color: var(--vt-cyan) !important;
+}
+#Wrapper :is(.reply-strip-text, .reply-parent-text) {
+  color: var(--vt-muted) !important;
+}
+#Wrapper .reply-parent-cancel,
+#Wrapper .reply-quote-no {
+  color: var(--vt-amber) !important;
+}
+
+/* ============================================================
+ * 8. Forms & controls
+ * ============================================================ */
+:is(#Wrapper, #Top, #site-header, #Bottom) :is(.sl, .sll, .sls, .ml, .mll, .mle),
+#Wrapper textarea,
+#Wrapper input[type="text"],
+#Wrapper input[type="email"],
+#Wrapper input[type="password"],
+#Wrapper input[type="number"],
+#Wrapper input[type="url"] {
+  background: var(--vt-canvas) !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-control) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: var(--vt-mono) !important;
+  caret-color: var(--vt-accent);
+}
+:is(#Wrapper, #Top, #site-header, #Bottom) :is(.sl, .sll, .sls, .ml, .mll, .mle):focus,
+#Wrapper :is(textarea, input):focus {
+  border-color: var(--vt-accent) !important;
+  outline: none;
+  box-shadow: 0 0 0 1px var(--vt-accent) !important;
+}
+#Wrapper ::placeholder {
+  color: var(--vt-dim);
+}
+
+:is(#Wrapper, #Top, #site-header, #Bottom) .super.button,
+#Wrapper .normal.button {
+  background: var(--vt-fill) !important;
+  background-image: none !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-control) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  font-family: var(--vt-mono) !important;
+  font-weight: 500;
+}
+:is(#Wrapper, #Top, #site-header, #Bottom) .super.button:hover,
+#Wrapper .normal.button:hover {
+  color: var(--vt-accent) !important;
+  border-color: var(--vt-accent) !important;
+  background: var(--vt-hover) !important;
+}
+
+:is(#Wrapper, #Top, #site-header) :is(input[type="submit"], button[type="submit"], a[href="/signup"]).super.normal.button {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+  border-color: var(--vt-accent) !important;
+  font-weight: 700;
+}
+:is(#Wrapper, #Top, #site-header) :is(input[type="submit"], button[type="submit"], a[href="/signup"]).super.normal.button:hover {
+  background: var(--vt-cyan) !important;
+  border-color: var(--vt-cyan) !important;
+  box-shadow: var(--vt-glow) !important;
+  color: var(--vt-on-accent) !important;
+}
+
+/* Settings: on/off switches styled as [ON ] / [OFF] toggles */
+#Wrapper .onoffswitch .frame,
+#Wrapper .onoffswitch label {
+  border-radius: 0 !important;
+}
+#Wrapper .onoffswitch label .frame::before {
+  content: "[ON]" !important;
+}
+#Wrapper .onoffswitch label .frame::after {
+  content: "[OFF]" !important;
+}
+#Wrapper .onoffswitch label {
+  border: 1px solid var(--vt-control) !important;
+  background: var(--vt-canvas) !important;
+}
+#Wrapper .onoffswitch label .frame::before {
+  height: 28px !important;
+  line-height: 28px !important;
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+  font-family: var(--vt-mono) !important;
+  font-weight: 700;
+}
+#Wrapper .onoffswitch label .frame::after {
+  height: 28px !important;
+  line-height: 28px !important;
+  background: var(--vt-fill) !important;
+  color: var(--vt-muted) !important;
+  font-family: var(--vt-mono) !important;
+}
+#Wrapper .onoffswitch label .switch {
+  background: var(--vt-ink) !important;
+  margin: 5px !important;
+  border: 1px solid var(--vt-control) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#Wrapper .onoffswitch input:focus-visible + label {
+  outline: 2px solid var(--vt-accent) !important;
+  outline-offset: 2px;
+}
+
+/* Theme switch */
+#Wrapper .theme-switch {
+  border-radius: 0 !important;
+  border: 1px solid var(--vt-control);
+}
+#Wrapper .theme-switch * {
+  border-radius: 0 !important;
+}
+
+/* Select / Select2 */
+#Wrapper :is(select:not(.select2-hidden-accessible), .select2-selection--single),
+#Wrapper select {
+  background: var(--vt-canvas) !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-control) !important;
+  border-radius: 0 !important;
+  font-family: var(--vt-mono) !important;
+}
+#Wrapper .select2-selection__rendered {
+  color: var(--vt-ink) !important;
+  font-family: var(--vt-mono) !important;
+}
+#Wrapper .select2-selection__arrow b {
+  border-top-color: var(--vt-accent) !important;
+}
+:root body > .select2-container--open .select2-dropdown {
+  background: var(--vt-surface) !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-accent) !important;
+  border-radius: 0 !important;
+  font-family: var(--vt-mono) !important;
+}
+:root body > .select2-container--open .select2-search__field {
+  background: var(--vt-canvas) !important;
+  color: var(--vt-ink) !important;
+  border: 1px solid var(--vt-control) !important;
+  border-radius: 0 !important;
+}
+:root body > .select2-container--open .select2-results__option--selected {
+  background: var(--vt-fill) !important;
+  color: var(--vt-accent) !important;
+}
+:root body > .select2-container--open .select2-results__option--highlighted {
+  background: var(--vt-accent) !important;
+  color: var(--vt-on-accent) !important;
+}
+
+/* Tables in settings */
+#Wrapper:has(.onoffswitch) form td {
+  color: var(--vt-ink);
+}
+#Wrapper:has(.onoffswitch) form td[align="right"] {
+  color: var(--vt-muted);
+}
+
+/* ============================================================
+ * 9. Footer
+ * ============================================================ */
+#Bottom {
+  background: var(--vt-solid) !important;
+  border-top: 1px solid var(--vt-line) !important;
+  color: var(--vt-dim) !important;
+}
+#Bottom a:any-link {
+  color: var(--vt-muted) !important;
+}
+#Bottom a:any-link:hover {
+  color: var(--vt-accent) !important;
+}
+
+/* ============================================================
+ * 10. Focus, motion, scrollbars
+ * ============================================================ */
+:is(#Wrapper, #Top, #site-header, #Bottom) :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--vt-accent) !important;
+  outline-offset: 1px;
+  border-radius: 0 !important;
+}
+
+html {
+  scrollbar-color: var(--vt-control) var(--vt-canvas);
+}
+
+#Wrapper :is(a, .cell.item, .button, input, textarea) {
+  transition: background-color 0.08s steps(2), color 0.08s steps(2), border-color 0.08s steps(2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+ * 11. Responsive
+ * ============================================================ */
+@media (max-width: 840px) {
+  :is(#Top, #Wrapper, #Bottom) > .content {
+    min-width: 0 !important;
+    box-sizing: border-box;
+    padding-inline: 8px;
+  }
+  #Main {
+    margin-inline: 0 !important;
+    min-width: 0;
+    max-width: 100%;
+  }
+  #Wrapper .topic_info {
+    overflow-wrap: anywhere;
+  }
+  #Wrapper .item_title a {
+    overflow-wrap: anywhere;
+  }
+  #Wrapper > .content:has(> #Main) {
+    display: flex;
+    flex-direction: column;
+  }
+  #Rightbar {
+    float: none !important;
+    order: 1;
+    width: auto !important;
+    min-width: 0;
+    margin-right: 0 !important;
+  }
+  #Leftbar:empty {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  #Top {
+    height: auto !important;
+  }
+  #Top .site-nav {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-block: 8px;
+  }
+  #Logo::after {
+    content: "";
+    padding: 0;
+  }
+  #Top #search-container {
+    margin-left: 0 !important;
+    flex: 1 1 90px;
+    width: auto !important;
+    max-width: 245px;
+  }
+  #Top .tools {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 2px 10px;
+    text-align: left;
+  }
+  #Top .tools * {
+    margin-left: 0 !important;
+  }
+  #Wrapper .select2-container,
+  #Wrapper select {
+    max-width: 100% !important;
+  }
+  #Wrapper .cell.item td[width="70"] {
+    width: 42px;
+  }
+  #Wrapper .cell.item td[width="48"] {
+    width: 32px;
+  }
+  #Wrapper .cell.item td[width="48"] .avatar {
+    width: 32px !important;
+  }
+  #Wrapper .header h1 {
+    font-size: 17px;
+  }
+  #Wrapper .item_title::before {
+    content: "";
+  }
+}
+
+/* ============================================================
+ * 12. Phosphor glow accents
+ * ============================================================ */
+#Wrapper .header h1,
+#Wrapper .header h1::before,
+#Tabs a.tab_current:any-link,
+#Wrapper .item_title a:any-link:hover,
+#Wrapper .topic_content :is(h1, h2, h3, h4),
+#Wrapper a.count_orange:any-link:not(:visited) {
+  text-shadow: var(--vt-glow);
+}
+#Tabs a.tab_current:any-link,
+#Wrapper a.tab_current[href^="/settings/"]:any-link,
+#Wrapper .page_current {
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.45);
+  text-shadow: none;
+}
+#Wrapper .box {
+  box-shadow: 0 0 0 1px rgba(0, 255, 65, 0.04), 0 0 18px rgba(0, 255, 65, 0.05) !important;
+}
+#Wrapper .box:empty {
+  box-shadow: none !important;
+}
+#Wrapper img {
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) brightness(0.8) !important;
+}
+#Wrapper .box > .cell.item:hover {
+  box-shadow: inset 2px 0 0 var(--vt-accent), inset 6px 0 10px -6px var(--vt-accent);
+}
+#Wrapper :is(.topic_content, .reply_content) pre {
+  background: rgba(0, 0, 0, 0.85) !important;
+  text-shadow: 0 0 3px rgba(0, 255, 65, 0.35);
+}
+
+/* ============================================================
+ * 13. tmux split-pane layout
+ *     sidebar pane (left) | main pane (right) | status bar (bottom)
+ * ============================================================ */
+:root:root {
+  --vt-status-h: 30px;
+  --vt-pane: #0f5a26;
+}
+
+body {
+  padding-bottom: calc(var(--vt-status-h) + 4px);
+}
+
+/* --- Panes ------------------------------------------------- */
+#Wrapper > .content:has(> #Main) {
+  display: grid !important;
+  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-areas: "side main";
+  gap: 0 10px;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  padding: 10px 10px 0;
+  align-items: start;
+}
+#Wrapper > .content:has(> #Main)::after {
+  display: none;
+}
+#Wrapper > .content > #Leftbar {
+  display: none;
+}
+
+#Wrapper > .content > #Rightbar,
+#Wrapper > .content > #Main {
+  position: relative;
+  float: none !important;
+  width: auto !important;
+  min-width: 0;
+  margin: 0 !important;
+  box-sizing: border-box;
+  border: 1px solid var(--vt-pane);
+  background: rgba(0, 6, 2, 0.55);
+  padding: 14px 8px 8px;
+}
+#Wrapper > .content > #Rightbar {
+  grid-area: side;
+}
+#Wrapper > .content > #Main {
+  grid-area: main;
+  border-color: var(--vt-accent);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.12);
+}
+
+/* tmux pane-border labels */
+#Wrapper > .content > #Main::before,
+#Wrapper > .content > #Rightbar::before {
+  position: absolute;
+  top: -1px;
+  left: 10px;
+  padding: 0 6px;
+  font: 700 11px/16px var(--vt-mono);
+  transform: translateY(-50%);
+  background: #000;
+  z-index: 1;
+}
+#Wrapper > .content > #Main::before {
+  content: "[0] main *";
+  color: var(--vt-accent);
+  text-shadow: var(--vt-glow);
+}
+#Wrapper > .content > #Rightbar::before {
+  content: "[1] sidebar";
+  color: var(--vt-muted);
+}
+
+#Wrapper > .content > :is(#Main, #Rightbar) > .sep20:first-child {
+  display: none;
+}
+#Wrapper > .content > :is(#Main, #Rightbar) .sep20 {
+  height: 8px;
+}
+#Wrapper > .content > :is(#Main, #Rightbar) .box {
+  box-shadow: none !important;
+}
+
+/* --- Topic list → htop-style single-line table ------------- */
+#Wrapper .box > .cell.item {
+  padding: 5px 10px !important;
+}
+#Wrapper .cell.item > table > tbody > tr {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+}
+#Wrapper .cell.item td[width="48"],
+#Wrapper .cell.item td[width="10"] {
+  display: none;
+}
+#Wrapper .cell.item td[width="70"] {
+  order: -1;
+  width: auto !important;
+  text-align: left;
+}
+#Wrapper .cell.item td[width="auto"] {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+#Wrapper .cell.item .sep5 {
+  display: none;
+}
+#Wrapper .cell.item .item_title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13.5px;
+}
+#Wrapper .cell.item .item_title::before {
+  content: "";
+}
+/* drop bullets / "最后回复来自" text nodes, keep node | user | time columns */
+#Wrapper .cell.item .topic_info {
+  --vt-col: 12px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  font-size: 0 !important;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+#Wrapper .cell.item .topic_info > * {
+  font-size: var(--vt-col);
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#Wrapper .cell.item .topic_info > .votes,
+#Wrapper .cell.item .topic_info > strong ~ strong {
+  display: none;
+}
+/* fixed-width columns measured in ch of a 12px mono font */
+#Wrapper .cell.item .topic_info > a.node {
+  width: 11ch;
+  margin-right: 1ch;
+  text-align: center;
+  padding: 0 2px;
+}
+#Wrapper .cell.item .topic_info > a.node + * {
+  margin-left: 0;
+}
+#Wrapper .cell.item .topic_info > strong {
+  width: 12ch;
+}
+#Wrapper .cell.item .topic_info > span[title] {
+  width: 16ch;
+  text-align: left;
+}
+#Wrapper .cell.item .topic_info::before {
+  content: "";
+  order: 1;
+}
+/* pro badges etc. inside info shouldn't break the grid */
+#Wrapper .cell.item .topic_info > :not(.node, strong, span[title], .votes) {
+  display: none;
+}
+#Wrapper :is(a.count_livid, a.count_orange, a.count_blue, a.count_green):any-link {
+  display: inline-block;
+  min-width: 4ch;
+  text-align: right;
+}
+
+/* column header row */
+#Wrapper #SecondaryTabs + .cell.item::before,
+#Wrapper #Tabs + .cell.item::before {
+  content: "REPLY  TITLE";
+  display: block;
+  margin: -5px -10px 5px;
+  padding: 3px 10px;
+  background: var(--vt-accent);
+  color: #000;
+  font: 700 11px/16px var(--vt-mono);
+  letter-spacing: 0.06em;
+  white-space: pre;
+  background-image: linear-gradient(90deg, transparent calc(100% - 300px), transparent);
+}
+#Wrapper #SecondaryTabs + .cell.item::after,
+#Wrapper #Tabs + .cell.item::after {
+  content: "NODE        USER        TIME";
+  position: absolute;
+  top: 3px;
+  right: 10px;
+  width: 40ch;
+  color: #000;
+  font: 700 12px/16px var(--vt-mono);
+  letter-spacing: 0;
+  white-space: pre;
+}
+
+/* --- Top bar → bottom tmux status line ---------------------- */
+#Top {
+  position: fixed !important;
+  inset: auto 0 0 0;
+  z-index: 50 !important;
+  height: var(--vt-status-h) !important;
+  background: var(--vt-accent) !important;
+  border: 0 !important;
+  box-shadow: 0 0 14px rgba(0, 255, 65, 0.35) !important;
+}
+#Top > .content {
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+#Top .site-nav {
+  height: 100%;
+  gap: 10px;
+}
+#Top #Logo::before {
+  content: "[v2ex]";
+  background: #000;
+  color: var(--vt-accent);
+  box-shadow: none;
+  padding: 1px 6px;
+}
+#Top #Logo::after {
+  content: "neo@matrix";
+  color: #000;
+  text-shadow: none;
+  font-weight: 700;
+}
+#Top .site-nav > a:has(#Logo)::after {
+  color: #000;
+  text-shadow: none;
+}
+#Top #search-container {
+  background: #000 !important;
+  border-color: #000 !important;
+  height: 22px !important;
+}
+#Top #search-container #search-result {
+  top: auto !important;
+  bottom: calc(100% + 6px) !important;
+}
+#Top .tools {
+  counter-reset: vt-win;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#Top a.top:any-link {
+  color: #000 !important;
+  font-weight: 700;
+}
+#Top a.top:any-link::before {
+  counter-increment: vt-win;
+  content: counter(vt-win) ":";
+  opacity: 0.6;
+}
+#Top a.top:any-link:hover {
+  background: #000 !important;
+  color: var(--vt-accent) !important;
+}
+#Top :is(a, input):focus-visible {
+  outline-color: #000 !important;
+}
+
+/* footer becomes a quiet log pane */
+#Bottom {
+  margin-top: 10px;
+}
+#Bottom > .content {
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+/* --- Responsive -------------------------------------------- */
+@media (max-width: 1100px) {
+  #Wrapper > .content:has(> #Main) {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+  #Wrapper .cell.item .topic_info > strong {
+    display: none;
+  }
+  #Wrapper #SecondaryTabs + .cell.item::after,
+  #Wrapper #Tabs + .cell.item::after {
+    content: "NODE        TIME";
+    width: 28ch;
+  }
+}
+
+@media (max-width: 840px) {
+  #Wrapper > .content:has(> #Main) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "main" "side";
+    gap: 18px;
+    padding: 10px 6px 0;
+  }
+  #Wrapper > .content > #Rightbar {
+    position: relative;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  #Wrapper > .content > #Rightbar::before {
+    position: absolute;
+    top: -1px;
+    left: 10px;
+    margin: 0;
+    transform: translateY(-50%);
+  }
+  #Wrapper > .content > :is(#Main, #Rightbar) {
+    padding: 12px 4px 4px;
+  }
+}
+
+@media (max-width: 520px) {
+  :root:root {
+    --vt-status-h: 0px;
+  }
+  body {
+    padding-bottom: 0;
+  }
+  #Top {
+    position: relative !important;
+    inset: auto;
+    height: auto !important;
+  }
+  #Top .site-nav {
+    padding-block: 6px;
+  }
+  #Top #Logo::after {
+    content: "";
+    padding: 0;
+  }
+  #Top .tools {
+    white-space: normal;
+  }
+  /* list rows: title on its own line, meta below */
+  #Wrapper .cell.item > table > tbody > tr {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+  }
+  #Wrapper .cell.item td[width="auto"] {
+    flex-direction: column;
+    gap: 2px;
+  }
+  #Wrapper .cell.item .item_title {
+    white-space: normal;
+    overflow: visible;
+    width: 100%;
+  }
+  #Wrapper .cell.item .topic_info > :is(strong, span[title]) {
+    width: auto;
+  }
+  #Wrapper #SecondaryTabs + .cell.item::after,
+  #Wrapper #Tabs + .cell.item::after {
+    display: none;
+  }
+}
