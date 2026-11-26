@@ -55,14 +55,8 @@
   --vt-radius-sm: 9px;
   --vt-radius-xs: 6px;
   --vt-radius-pill: 999px;
-  --vt-shadow-card: light-dark(
-    0 1px 2px rgba(0, 0, 0, 0.03),
-    0 6px 20px rgba(0, 0, 0, 0.26)
-  );
-  --vt-shadow-card-extra: light-dark(
-    0 4px 16px rgba(0, 0, 0, 0.025),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.07)
-  );
+  --vt-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.025);
+  --vt-shadow-small: 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.025);
   --vt-shadow-thumb: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16),
     0 3px 1px rgba(0, 0, 0, 0.06);
   --vt-shadow-segment: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0.5px 1px rgba(0, 0, 0, 0.08);
@@ -126,23 +120,29 @@
   --theme-switch-glyph-chosen-hover-color: var(--vt-ink);
 
   --shadows: var(--vt-shadow-card);
-  --small-shadows: var(--vt-shadow-card);
+  --small-shadows: var(--vt-shadow-small);
 }
 
 :root[data-site-theme="light"] {
   color-scheme: light;
   --vt-logo-filter: brightness(0) invert(0.11);
+  --vt-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.025);
+  --vt-shadow-small: 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.025);
 }
 
 :root[data-site-theme="dark"],
 :root:not([data-site-theme]):has(#Wrapper.Night) {
   color-scheme: dark;
   --vt-logo-filter: brightness(0) invert(0.95);
+  --vt-shadow-card: 0 6px 20px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.07);
+  --vt-shadow-small: 0 2px 8px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-site-theme="light"]) {
     --vt-logo-filter: brightness(0) invert(0.95);
+    --vt-shadow-card: 0 6px 20px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.07);
+    --vt-shadow-small: 0 2px 8px rgba(0, 0, 0, 0.28), inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
   }
 }
 
@@ -246,14 +246,26 @@ body {
   padding: 0;
 }
 
-#Logo,
-#LogoMobile {
-  filter: var(--vt-logo-filter);
-  transition: opacity 0.15s ease;
+:is(#Top, #site-header) a:has(> #Logo, > #LogoMobile) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
 }
 
+#Logo,
+#LogoMobile {
+  filter: var(--vt-logo-filter) blur(6px);
+  opacity: 0.26;
+  transition: filter 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:is(#Top, #site-header) a:has(#Logo, #LogoMobile):is(:hover, :focus-visible) :is(#Logo, #LogoMobile),
+#Top .site-nav:hover:not(:has(#search-container:hover, .tools:hover)) :is(#Logo, #LogoMobile),
 #Top a:hover #Logo {
-  opacity: 0.72;
+  filter: var(--vt-logo-filter) blur(0);
+  opacity: 1;
 }
 
 :is(#Top, #site-header) #search-container {
@@ -320,7 +332,10 @@ body {
 }
 
 #Top .tools {
-  margin-left: auto;
+  flex: 1 1 auto;
+  align-self: stretch;
+  justify-content: flex-end;
+  margin-left: 0;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -352,7 +367,7 @@ body {
   background-color: var(--vt-surface);
   border: 1px solid var(--vt-line);
   border-radius: var(--vt-radius);
-  box-shadow: var(--vt-shadow-card), var(--vt-shadow-card-extra);
+  box-shadow: var(--vt-shadow-card);
 }
 
 #Wrapper .box:empty,
@@ -432,6 +447,32 @@ body {
   background: var(--vt-fill);
   border-radius: var(--vt-radius-pill);
   overflow: hidden;
+}
+
+/* Frosted Privacy Veil on Personal Profile Card (Hover / Focus to Reveal) */
+#Rightbar .box:has(#member-activity, td[width="48"] > a[href^="/member/"]) {
+  position: relative;
+}
+
+#Rightbar .box:has(#member-activity, td[width="48"] > a[href^="/member/"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: calc(var(--vt-radius) - 1px);
+  pointer-events: none;
+  background: light-dark(rgba(255, 255, 255, 0.56), rgba(28, 28, 30, 0.6));
+  backdrop-filter: blur(13px) saturate(150%);
+  -webkit-backdrop-filter: blur(13px) saturate(150%);
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    backdrop-filter 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    -webkit-backdrop-filter 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#Rightbar .box:has(#member-activity, td[width="48"] > a[href^="/member/"]):is(:hover, :focus-within)::after {
+  opacity: 0;
+  backdrop-filter: blur(0) saturate(100%);
+  -webkit-backdrop-filter: blur(0) saturate(100%);
 }
 
 /* ==========================================================================
